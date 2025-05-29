@@ -186,7 +186,7 @@ def get_map():
     map_type = request.args.get('map_type', 'points')  # points, speed_heatmap, density_heatmap
     
     # Загружаем данные
-    df = pd.read_excel('/home/ubuntu/upload/cbm_st_pro (1).xlsx', sheet ='cbm_st_pro (2)')
+    df = pd.read_excel('/home/ubuntu/upload/cbm_st_pro_1.xlsx')
     
     # Фильтруем по скорости
     if provider == 'kt':
