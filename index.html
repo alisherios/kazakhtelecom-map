@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Аналитическая карта Казахтелеком</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <style>
+        :root {
+            --primary-color: #0056A4;
+            --secondary-color: #FFFFFF;
+            --accent-color: #FF6600;
+            --background-color: #F5F5F5;
+            --light-blue: #66A3D2;
+            --dark-blue: #003366;
+            --light-orange: #FFAA66;
+        }
+        
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: var(--background-color);
+            color: #333;
+            margin: 0;
+            padding: 0;
+        }
+        
+        .header {
+            background-color: var(--primary-color);
+            color: var(--secondary-color);
+            padding: 15px 0;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+        
+        .logo {
+            height: 40px;
+            margin-right: 15px;
+        }
+        
+        .main-container {
+            padding: 20px;
+        }
+        
+        .map-container {
+            height: 600px;
+            background-color: var(--secondary-color);
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            margin-bottom: 20px;
+        }
+        
+        .filter-panel {
+            background-color: var(--secondary-color);
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            height: 600px;
+            overflow-y: auto;
+        }
+        
+        .filter-section {
+            margin-bottom: 20px;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 15px;
+        }
+        
+        .filter-section:last-child {
+            border-bottom: none;
+        }
+        
+        .filter-title {
+            font-weight: bold;
+            color: var(--primary-color);
+            margin-bottom: 10px;
+        }
+        
+        .btn-primary {
+            background-color: var(--primary-color);
+            border-color: var(--primary-color);
+        }
+        
+        .btn-primary:hover {
+            background-color: var(--dark-blue);
+            border-color: var(--dark-blue);
+        }
+        
+        .btn-accent {
+            background-color: var(--accent-color);
+            border-color: var(--accent-color);
+            color: white;
+        }
+        
+        .btn-accent:hover {
+            background-color: #E55500;
+            border-color: #E55500;
+            color: white;
+        }
+        
+        .form-check-input:checked {
+            background-color: var(--primary-color);
+            border-color: var(--primary-color);
+        }
+        
+        .analytics-container {
+            background-color: var(--secondary-color);
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+        }
+        
+        .analytics-title {
+            color: var(--primary-color);
+            border-bottom: 2px solid var(--accent-color);
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .stat-card {
+            background-color: var(--secondary-color);
+            border-radius: 10px;
+            padding: 15px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+            height: 100%;
+            transition: transform 0.3s;
+            border-left: 4px solid var(--primary-color);
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .stat-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: var(--primary-color);
+        }
+        
+        .stat-label {
+            color: #666;
+            font-size: 14px;
+        }
+        
+        .chart-container {
+            height: 400px;
+            margin-bottom: 30px;
+        }
+        
+        .provider-kt {
+            color: var(--primary-color);
+        }
+        
+        .provider-beeline {
+            color: #FFCC00;
+        }
+        
+        .provider-almatv {
+            color: var(--accent-color);
+        }
+        
+        .map-iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+        
+        .loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+        }
+        
+        .loading i {
+            font-size: 50px;
+            color: var(--primary-color);
+        }
+        
+        /* Стили для ползунка */
+        .range-slider {
+            width: 100%;
+        }
+        
+        .range-slider .form-range::-webkit-slider-thumb {
+            background: var(--primary-color);
+        }
+        
+        .range-slider .form-range::-moz-range-thumb {
+            background: var(--primary-color);
+        }
+        
+        .range-values {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 5px;
+        }
+        
+        /* Адаптивность */
+        @media (max-width: 992px) {
+            .filter-panel {
+                height: auto;
+                margin-bottom: 20px;
+            }
+            
+            .map-container {
+                height: 500px;
+            }
+            
+            .chart-container {
+                height: 350px;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .map-container {
+                height: 400px;
+            }
+            
+            .chart-container {
+                height: 300px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Шапка -->
+    <header class="header">
+        <div class="container">
+            <div class="d-flex align-items-center">
+                <img src="https://telecom.kz/assets/img/logo.svg" alt="Казахтелеком" class="logo">
+                <h1 class="h4 mb-0">Аналитическая карта интернет-покрытия</h1>
+            </div>
+        </div>
+    </header>
+    
+    <!-- Основной контент -->
+    <div class="container-fluid main-container">
+        <div class="row">
+            <!-- Панель фильтров -->
+            <div class="col-lg-3">
+                <div class="filter-panel">
+                    <h2 class="h5 mb-4">Панель управления</h2>
+                    
+                    <!-- Режим отображения -->
+                    <div class="filter-section">
+                        <div class="filter-title">Режим отображения</div>
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="radio" name="mapType" id="pointsMap" value="points" checked>
+                            <label class="form-check-label" for="pointsMap">
+                                <i class="fas fa-map-marker-alt me-1"></i> Точки интернета
+                            </label>
+                        </div>
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="radio" name="mapType" id="speedHeatmap" value="speed_heatmap">
+                            <label class="form-check-label" for="speedHeatmap">
+                                <i class="fas fa-fire me-1"></i> Тепловая карта по скорости
+                            </label>
+                        </div>
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="radio" name="mapType" id="densityHeatmap" value="density_heatmap">
+                            <label class="form-check-label" for="densityHeatmap">
+                                <i class="fas fa-chart-area me-1"></i> Тепловая карта по плотности
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <!-- Фильтр по провайдерам -->
+                    <div class="filter-section">
+                        <div class="filter-title">Провайдер</div>
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="radio" name="provider" id="allProviders" value="all" checked>
+                            <label class="form-check-label" for="allProviders">
+                                Все провайдеры
+                            </label>
+                        </div>
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="radio" name="provider" id="ktProvider" value="kt">
+                            <label class="form-check-label provider-kt" for="ktProvider">
+                                <i class="fas fa-wifi me-1"></i> Казахтелеком
+                            </label>
+                        </div>
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="radio" name="provider" id="beelineProvider" value="beeline">
+                            <label class="form-check-label provider-beeline" for="beelineProvider">
+                                <i class="fas fa-wifi me-1"></i> Beeline
+                            </label>
+                        </div>
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="radio" name="provider" id="almatvProvider" value="almatv">
+                            <label class="form-check-label provider-almatv" for="almatvProvider">
+                                <i class="fas fa-wifi me-1"></i> AlmaTV
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <!-- Фильтр по скорости -->
+                    <div class="filter-section">
+                        <div class="filter-title">Скорость интернета</div>
+                        <div class="mb-3">
+                            <div class="range-slider">
+                                <label for="speedRange" class="form-label">Диапазон скорости (Мбит/с)</label>
+                                <div class="d-flex align-items-center">
+                                    <span id="minSpeedValue">0</span>
+                                    <input type="range" class="form-range mx-2" id="speedRange" min="0" max="500" step="10" value="0">
+                                    <span id="maxSpeedValue">500</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <div class="btn-group w-100" role="group">
+                                <button type="button" class="btn btn-outline-primary btn-sm" data-speed="50">< 50 Мбит/с</button>
+                                <button type="button" class="btn btn-outline-primary btn-sm" data-speed="100">50-100 Мбит/с</button>
+                                <button type="button" class="btn btn-outline-primary btn-sm" data-speed="200">> 100 Мбит/с</button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Кнопки управления -->
+                    <div class="filter-section">
+                        <button id="applyFilters" class="btn btn-primary w-100 mb-2">
+                            <i class="fas fa-filter me-1"></i> Применить фильтры
+                        </button>
+                        <button id="resetFilters" class="btn btn-outline-secondary w-100">
+                            <i class="fas fa-undo me-1"></i> Сбросить фильтры
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Карта -->
+            <div class="col-lg-9">
+                <div class="map-container position-relative">
+                    <div id="map-wrapper">
+                        <iframe id="map-iframe" class="map-iframe" src="about:blank"></iframe>
+                    </div>
+                    <div class="loading" id="map-loading">
+                        <i class="fas fa-spinner fa-spin"></i>
+                        <p>Загрузка карты...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Аналитика -->
+        <div class="row mt-4">
+            <div class="col-12">
+                <div class="analytics-container">
+                    <h2 class="analytics-title">Общая статистика</h2>
+                    <div class="row" id="stats-cards">
+                        <div class="col-md-3 mb-3">
+                            <div class="stat-card">
+                                <div class="stat-value" id="total-points">-</div>
+                                <div class="stat-label">Всего точек интернета</div>
+                            </div>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <div class="stat-card">
+                                <div class="stat-value provider-kt" id="kt-avg-speed">-</div>
+                                <div class="stat-label">Средняя скорость Казахтелеком</div>
+                            </div>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <div class="stat-card">
+                                <div class="stat-value provider-beeline" id="beeline-avg-speed">-</div>
+                                <div class="stat-label">Средняя скорость Beeline</div>
+                            </div>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <div class="stat-card">
+                                <div class="stat-value provider-almatv" id="almatv-avg-speed">-</div>
+                                <div class="stat-label">Средняя скорость AlmaTV</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Графики -->
+        <div class="row mt-4">
+            <div class="col-lg-6 mb-4">
+                <div class="analytics-container">
+                    <h3 class="h5 mb-3">Сравнение средних скоростей провайдеров</h3>
+                    <div class="chart-container" id="providers-comparison-chart"></div>
+                </div>
+            </div>
+            <div class="col-lg-6 mb-4">
+                <div class="analytics-container">
+                    <h3 class="h5 mb-3">Доля провайдеров по количеству точек</h3>
+                    <div class="chart-container" id="providers-pie-chart"></div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="row mt-2">
+            <div class="col-lg-4 mb-4">
+                <div class="analytics-container">
+                    <h3 class="h5 mb-3">Распределение скоростей Казахтелеком</h3>
+                    <div class="chart-container" id="kt-hist-chart"></div>
+                </div>
+            </div>
+            <div class="col-lg-4 mb-4">
+                <div class="analytics-container">
+                    <h3 class="h5 mb-3">Распределение скоростей Beeline</h3>
+                    <div class="chart-container" id="beeline-hist-chart"></div>
+                </div>
+            </div>
+            <div class="col-lg-4 mb-4">
+                <div class="analytics-container">
+                    <h3 class="h5 mb-3">Распределение скоростей AlmaTV</h3>
+                    <div class="chart-container" id="almatv-hist-chart"></div>
+                </div>
+            </div>
+        </div>
+
+(Content truncated due to size limit. Use line ranges to read in chunks)
